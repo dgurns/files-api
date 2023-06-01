@@ -5,3 +5,7 @@ services:
     build: .
     ports:
       - "8080:8080"
+    environment:
+      BASIC_AUTH_USERNAME: ${BASIC_AUTH_USERNAME}
+      BASIC_AUTH_PASSWORD: ${BASIC_AUTH_PASSWORD}
+

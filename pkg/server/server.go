@@ -3,6 +3,7 @@ package server
 import (
 	"fmt"
 	"net/http"
+	"os"
 	"time"
 
 	"github.com/go-chi/chi/v5"
@@ -17,7 +18,16 @@ func Run() error {
 	r.Use(middleware.Logger)
 	r.Use(middleware.Recoverer)
 	r.Use(middleware.Timeout(60 * time.Second))
-	r.Use(middleware.BasicAuth("user", map[string]string{"demo": "password"}))
+
+	username := os.Getenv("BASIC_AUTH_USERNAME")
+	pwd := os.Getenv("BASIC_AUTH_PASSWORD")
+	if username == "" || pwd == "" {
+		fmt.Println("BASIC_AUTH_USERNAME and BASIC_AUTH_PASSWORD must be set")
+		os.Exit(1)
+	}
+	r.Use(middleware.BasicAuth("user", map[string]string{
+		username: pwd,
+	}))
 
 	r.Post("/files", func(w http.ResponseWriter, r *http.Request) {
 		w.Write([]byte("welcome"))
