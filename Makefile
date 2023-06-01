@@ -1,4 +1,4 @@
-default: start
+default: docker-compose
 
 .PHONY: install-tools
 install-tools:

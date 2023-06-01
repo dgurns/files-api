@@ -1,5 +1,7 @@
 package db
 
+import "fmt"
+
 type SQLiteClient struct {
 	dbPath string
 }
@@ -15,6 +17,7 @@ func NewSQLiteClient(dbPath string) (*SQLiteClient, error) {
 func (s SQLiteClient) SaveFile(name string, metadata map[string]string) (
 	id int, err error,
 ) {
+	fmt.Println("SAVING", name, metadata)
 	return 1, nil
 }
 
