@@ -5,19 +5,17 @@ install-tools:
 	go install github.com/cespare/reflex@latest
 
 bin/files-api:
-	go build -o bin/files-api
+	go build -o bin/files-api cmd/files-api/main.go
 
-.PHONY: env
-env:
-	$(source .env)
-	@echo "Environment variables set from .env file"
+start:
+	source .env && bin/files-api
 
-dev: install-tools bin/files-api env
-	reflex -R 'gen/|bin/' -s bin/files-api
+dev: install-tools bin/files-api
+	reflex -R 'gen/|bin/' -s make start
 
 docker:
 	docker build -t files-api .
 
-docker-compose: env
+docker-compose:
 	docker-compose build
-	docker-compose up
+	source .env && docker-compose up
