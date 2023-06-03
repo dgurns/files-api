@@ -2,8 +2,8 @@ package db
 
 import (
 	"database/sql"
-
-	_ "github.com/mattn/go-sqlite3"
+	"encoding/json"
+	"fmt"
 )
 
 type SQLiteClient struct {
@@ -12,16 +12,11 @@ type SQLiteClient struct {
 
 var _ DBClient = SQLiteClient{}
 
-func NewSQLiteClient(dbPath string) (*SQLiteClient, error) {
-	db, err := sql.Open("sqlite3", dbPath)
-	if err != nil {
-		return nil, err
-	}
-	defer db.Close()
+func NewSQLiteClient(db *sql.DB) (*SQLiteClient, error) {
 	return &SQLiteClient{db: db}, nil
 }
 
-func (s SQLiteClient) SaveFile(name string, metadata map[string]string) (
+func (s SQLiteClient) SaveFile(name string, metadata string) (
 	id int, err error,
 ) {
 	result, err := s.db.Exec(
@@ -30,6 +25,7 @@ func (s SQLiteClient) SaveFile(name string, metadata map[string]string) (
 		metadata,
 	)
 	if err != nil {
+		fmt.Printf("Error saving file: %s", err)
 		return 0, err
 	}
 	lastInsertID, err := result.LastInsertId()
@@ -45,11 +41,13 @@ func (s SQLiteClient) GetFile(id int) (*File, error) {
 		return nil, err
 	}
 	f := &File{}
-	for rows.Next() {
+	if rows.Next() {
 		err = rows.Scan(&f.ID, &f.Name, &f.Metadata)
 		if err != nil {
 			return nil, err
 		}
+	} else {
+		return nil, fmt.Errorf("file not found")
 	}
 	return f, nil
 }
@@ -80,4 +78,15 @@ func (s SQLiteClient) SearchFiles(query string) ([]*File, error) {
 		files = append(files, f)
 	}
 	return files, nil
+}
+
+func JSONStrToMap(metadata string) (map[string]interface{}, error) {
+	var meta map[string]interface{}
+	if metadata != "" {
+		err := json.Unmarshal([]byte(metadata), &meta)
+		if err != nil {
+			return nil, err
+		}
+	}
+	return meta, nil
 }

@@ -1,6 +1,7 @@
 package server
 
 import (
+	"database/sql"
 	"encoding/json"
 	"fmt"
 	"io/ioutil"
@@ -9,6 +10,8 @@ import (
 	"strconv"
 	"time"
 
+	_ "github.com/mattn/go-sqlite3"
+
 	"github.com/dgurns/files-api/internal/db"
 	"github.com/dgurns/files-api/internal/storage"
 	"github.com/go-chi/chi/v5"
@@ -16,11 +19,18 @@ import (
 )
 
 func Run() error {
-	dbPath := fmt.Sprintf(
-		"%s/%s", os.Getenv("LOCAL_DB_PATH"), os.Getenv("LOCAL_DB_NAME"),
+	dbConn, err := sql.Open(
+		"sqlite3",
+		os.Getenv("LOCAL_DB_PATH")+"/"+os.Getenv("LOCAL_DB_NAME"),
 	)
-	dbClient, err := db.NewSQLiteClient(dbPath)
 	if err != nil {
+		fmt.Println("Error opening database connection")
+		return err
+	}
+	defer dbConn.Close()
+	dbClient, err := db.NewSQLiteClient(dbConn)
+	if err != nil {
+		fmt.Println("Error creating database client")
 		return err
 	}
 
@@ -60,16 +70,28 @@ func Run() error {
 		}
 		defer file.Close()
 
+		allowed := []string{"application/pdf", "image/jpeg", "image/png"}
+		for _, a := range allowed {
+			if handler.Header.Get("Content-Type") == a {
+				break
+			}
+			http.Error(w, "Invalid file type: only PDF, JPEG, or PNG are allowed", http.StatusBadRequest)
+			return
+		}
 		fileBytes, err := ioutil.ReadAll(file)
 		if err != nil {
 			http.Error(w, "Error reading file", http.StatusInternalServerError)
 			return
 		}
 
-		var metadata map[string]string
-		raw := r.FormValue("metadata")
-		if raw != "" {
-			json.Unmarshal([]byte(raw), &metadata)
+		metadata := r.FormValue("metadata")
+		if metadata != "" {
+			var m map[string]interface{}
+			err = json.Unmarshal([]byte(metadata), &m)
+			if err != nil {
+				http.Error(w, "Invalid metadata: must be valid JSON", http.StatusBadRequest)
+				return
+			}
 		}
 
 		id, err := dbClient.SaveFile(handler.Filename, metadata)
@@ -103,6 +125,11 @@ func Run() error {
 			http.Error(w, "File not found in database", http.StatusNotFound)
 			return
 		}
+		meta, err := db.JSONStrToMap(file.Metadata)
+		if err != nil {
+			http.Error(w, "Error unmarshalling metadata", http.StatusInternalServerError)
+			return
+		}
 		fileBytes, err := storageClient.GetFile(id)
 		if err != nil {
 			http.Error(w, "File not found in storage", http.StatusNotFound)
@@ -111,7 +138,7 @@ func Run() error {
 		res, err := json.Marshal(&GetFileResponse{
 			ID:       file.ID,
 			Name:     file.Name,
-			Metadata: file.Metadata,
+			Metadata: meta,
 			Data:     fileBytes,
 		})
 		if err != nil {
@@ -142,18 +169,30 @@ func Run() error {
 	})
 
 	r.Get("/files/search", func(w http.ResponseWriter, r *http.Request) {
-		var req SearchFilesRequest
-		err := json.NewDecoder(r.Body).Decode(&req)
-		if err != nil {
-			http.Error(w, "Error decoding request body", http.StatusBadRequest)
+		query := r.URL.Query().Get("query")
+		if query == "" {
+			http.Error(w, "Missing query parameter", http.StatusBadRequest)
 			return
 		}
-		files, err := dbClient.SearchFiles(req.Query)
+		files, err := dbClient.SearchFiles(query)
 		if err != nil {
 			http.Error(w, "No files found", http.StatusNotFound)
 			return
 		}
-		res, err := json.Marshal(&SearchFilesResponse{Files: files})
+		results := []*SearchResult{}
+		for _, f := range files {
+			meta, err := db.JSONStrToMap(f.Metadata)
+			if err != nil {
+				http.Error(w, "Error unmarshalling metadata", http.StatusInternalServerError)
+				return
+			}
+			results = append(results, &SearchResult{
+				ID:       f.ID,
+				Name:     f.Name,
+				Metadata: meta,
+			})
+		}
+		res, err := json.Marshal(&SearchFilesResponse{Results: results})
 		if err != nil {
 			http.Error(w, "Error marshalling response", http.StatusInternalServerError)
 			return
