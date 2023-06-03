@@ -29,6 +29,10 @@ dev: install-tools
 	reflex -s -R 'local/|bin/' make start
 
 .PHONY: test
+test:
+	go test -v ./...
+
+.PHONY: test
 docker:
 	docker build -t files-api .
 
