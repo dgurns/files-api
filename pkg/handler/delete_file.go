@@ -13,11 +13,13 @@ func (h *Handler) DeleteFile(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, "Invalid file id", http.StatusBadRequest)
 		return
 	}
+
 	err = h.db.DeleteFile(id)
 	if err != nil {
 		http.Error(w, "Error deleting file from database", http.StatusInternalServerError)
 		return
 	}
+
 	err = h.storage.DeleteFile(id)
 	if err != nil {
 		http.Error(w, "Error deleting file from storage", http.StatusInternalServerError)

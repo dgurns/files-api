@@ -23,11 +23,13 @@ func (h *Handler) SearchFiles(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, "Missing query parameter", http.StatusBadRequest)
 		return
 	}
+
 	files, err := h.db.SearchFiles(query)
 	if err != nil {
 		http.Error(w, "No files found", http.StatusNotFound)
 		return
 	}
+
 	results := []*SearchResult{}
 	for _, f := range files {
 		meta, err := db.JSONStrToMap(f.Metadata)
@@ -41,6 +43,7 @@ func (h *Handler) SearchFiles(w http.ResponseWriter, r *http.Request) {
 			Metadata: meta,
 		})
 	}
+
 	res, err := json.Marshal(&SearchFilesResponse{Results: results})
 	if err != nil {
 		http.Error(w, "Error marshalling response", http.StatusInternalServerError)
