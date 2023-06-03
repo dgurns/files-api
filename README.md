@@ -55,4 +55,7 @@ make reset-local-storage
 
 # Run the dev server
 make dev
+
+# Run tests
+make test
 ```
