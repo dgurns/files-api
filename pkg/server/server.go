@@ -100,12 +100,12 @@ func Run() error {
 		}
 		file, err := dbClient.GetFile(id)
 		if err != nil {
-			http.Error(w, "Error retrieving file from database", http.StatusInternalServerError)
+			http.Error(w, "File not found in database", http.StatusNotFound)
 			return
 		}
 		fileBytes, err := storageClient.GetFile(id)
 		if err != nil {
-			http.Error(w, "Error retrieving file from storage", http.StatusInternalServerError)
+			http.Error(w, "File not found in storage", http.StatusNotFound)
 			return
 		}
 		res, err := json.Marshal(&GetFileResponse{
@@ -150,7 +150,7 @@ func Run() error {
 		}
 		files, err := dbClient.SearchFiles(req.Query)
 		if err != nil {
-			http.Error(w, "Error searching files", http.StatusInternalServerError)
+			http.Error(w, "No files found", http.StatusNotFound)
 			return
 		}
 		res, err := json.Marshal(&SearchFilesResponse{Files: files})

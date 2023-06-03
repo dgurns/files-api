@@ -1,3 +1,5 @@
+SHELL := /bin/bash
+
 default: docker-compose
 
 .PHONY: install-tools
@@ -19,12 +21,12 @@ bin/files-api:
 	go build -o bin/files-api cmd/files-api/main.go
 
 .PHONY: start
-start:
+start: bin/files-api
 	source .env && bin/files-api
 
 .PHONY: dev
-dev: install-tools bin/files-api
-	reflex -R 'gen/|bin/' -s make start
+dev: install-tools
+	reflex -s -R 'local/|bin/' make start
 
 .PHONY: test
 docker:
