@@ -10,7 +10,7 @@ type SQLiteClient struct {
 	db *sql.DB
 }
 
-var _ DBClient = SQLiteClient{}
+var _ Client = SQLiteClient{}
 
 func NewSQLiteClient(db *sql.DB) (*SQLiteClient, error) {
 	return &SQLiteClient{db: db}, nil

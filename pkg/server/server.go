@@ -57,7 +57,7 @@ func Run() error {
 	r.Use(middleware.Timeout(60 * time.Second))
 
 	// handle routes
-	h := handler.NewHandler(dbClient, storageClient)
+	h := handler.New(dbClient, storageClient)
 	r.Post("/files/upload", h.UploadFile)
 	r.Get("/files/{id}", h.GetFile)
 	r.Delete("/files/{id}", h.DeleteFile)

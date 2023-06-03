@@ -6,13 +6,13 @@ import (
 )
 
 type Handler struct {
-	db      *db.SQLiteClient
-	storage *storage.FilesystemClient
+	db      db.Client
+	storage storage.Client
 }
 
-func NewHandler(dbClient *db.SQLiteClient, storageClient *storage.FilesystemClient) *Handler {
+func New(db db.Client, storage storage.Client) *Handler {
 	return &Handler{
-		db:      dbClient,
-		storage: storageClient,
+		db:      db,
+		storage: storage,
 	}
 }

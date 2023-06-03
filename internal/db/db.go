@@ -6,7 +6,7 @@ type File struct {
 	Metadata string
 }
 
-type DBClient interface {
+type Client interface {
 	SaveFile(name string, metadata string) (id int, err error)
 	GetFile(id int) (*File, error)
 	DeleteFile(id int) error

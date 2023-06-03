@@ -11,7 +11,7 @@ type FilesystemClient struct {
 	StoragePath string
 }
 
-var _ StorageClient = FilesystemClient{}
+var _ Client = FilesystemClient{}
 
 func NewFilesystemClient(storagePath string) (*FilesystemClient, error) {
 	return &FilesystemClient{
