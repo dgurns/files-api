@@ -1,0 +1,112 @@
+openapi: 3.0.0
+info:
+  title: Files API
+  version: 1.0.0
+servers:
+  - url: http://localhost:8080
+security:
+  - basicAuth: []
+paths:
+  /files/upload:
+    post:
+      summary: Upload a file
+      requestBody:
+        required: true
+        content:
+          multipart/form-data:
+            schema:
+              type: object
+              properties:
+                file:
+                  type: string
+                  format: binary
+                metadata:
+                  type: string
+      responses:
+        '200':
+          description: OK
+        '400':
+          description: Bad Request
+        '500':
+          description: Internal Server Error
+  /files/{id}:
+    get:
+      summary: Get a file by ID
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  id:
+                    type: integer
+                  name:
+                    type: string
+                  metadata:
+                    type: object
+                  data:
+                    type: string
+                    format: binary
+        '400':
+          description: Bad Request
+        '404':
+          description: File not found
+        '500':
+          description: Internal Server Error
+    delete:
+      summary: Delete a file by ID
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        '204':
+          description: No Content
+        '400':
+          description: Bad Request
+        '404':
+          description: File not found
+        '500':
+          description: Internal Server Error
+  /files/search:
+    get:
+      summary: Search for files by metadata
+      parameters:
+        - name: query
+          in: query
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  results:
+                    type: array
+                    items:
+                      type: object
+                      properties:
+                        id:
+                          type: integer
+                        name:
+                          type: string
+                        metadata:
+                          type: object
+        '400':
+          description: Bad Request
+        '500':
+          description: Internal Server Error
