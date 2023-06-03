@@ -16,12 +16,16 @@ import (
 )
 
 func Run() error {
-	dbClient, err := db.NewSQLiteClient("/sqlite.db")
+	dbPath := fmt.Sprintf(
+		"%s/%s", os.Getenv("LOCAL_DB_PATH"), os.Getenv("LOCAL_DB_NAME"),
+	)
+	dbClient, err := db.NewSQLiteClient(dbPath)
 	if err != nil {
 		return err
 	}
 
-	storageClient, err := storage.NewFilesystemClient()
+	storagePath := os.Getenv("LOCAL_FILES_PATH")
+	storageClient, err := storage.NewFilesystemClient(storagePath)
 	if err != nil {
 		return err
 	}

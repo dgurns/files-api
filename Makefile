@@ -4,18 +4,33 @@ default: docker-compose
 install-tools:
 	go install github.com/cespare/reflex@latest
 
+.PHONY: reset-local-storage
+reset-local-storage:
+	$(eval LOCAL_DB_PATH := $(shell source .env && echo $$LOCAL_DB_PATH))
+	$(eval LOCAL_DB_NAME := $(shell source .env && echo $$LOCAL_DB_NAME))
+	$(eval LOCAL_FILES_PATH := $(shell source .env && echo $$LOCAL_FILES_PATH))
+	-rm -rf local
+	mkdir -p $(LOCAL_DB_PATH)
+	mkdir -p $(LOCAL_FILES_PATH)
+	sqlite3 $(LOCAL_DB_PATH)/$(LOCAL_DB_NAME) < migrations/init.sql
+
+.PHONY: bin/files-api
 bin/files-api:
 	go build -o bin/files-api cmd/files-api/main.go
 
+.PHONY: start
 start:
 	source .env && bin/files-api
 
+.PHONY: dev
 dev: install-tools bin/files-api
 	reflex -R 'gen/|bin/' -s make start
 
+.PHONY: test
 docker:
 	docker build -t files-api .
 
+.PHONY: docker-compose
 docker-compose:
 	docker-compose build
 	source .env && docker-compose up
