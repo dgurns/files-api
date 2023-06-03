@@ -2,14 +2,14 @@ FROM golang:1.19-alpine AS build
 
 WORKDIR /app
 
-RUN apk add --no-cache make bash
+RUN apk add --no-cache make bash gcc musl-dev
 
 COPY go.mod go.sum ./
 RUN go mod download
 
 COPY . ./
 
-RUN go build -o /app/bin/files-api /app/cmd/files-api
+RUN CGO_ENABLED=1 go build -o /app/bin/files-api /app/cmd/files-api
 
 FROM alpine:3
 

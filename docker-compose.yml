@@ -8,4 +8,9 @@ services:
     environment:
       BASIC_AUTH_USERNAME: ${BASIC_AUTH_USERNAME}
       BASIC_AUTH_PASSWORD: ${BASIC_AUTH_PASSWORD}
+      LOCAL_DB_PATH: ${LOCAL_DB_PATH}
+      LOCAL_DB_NAME: ${LOCAL_DB_NAME}
+      LOCAL_FILES_PATH: ${LOCAL_FILES_PATH}
+    volumes:
+      - ./local:/local
 

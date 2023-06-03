@@ -34,5 +34,4 @@ docker:
 
 .PHONY: docker-compose
 docker-compose:
-	docker-compose build
 	source .env && docker-compose up
