@@ -37,7 +37,7 @@ func Run() error {
 		return err
 	}
 
-	// set up router and middleware
+	// set up router
 	r := gin.Default()
 	r.SetTrustedProxies(nil)
 

@@ -30,7 +30,7 @@ dev: install-tools
 
 .PHONY: test
 test:
-	go test -v ./...
+	GIN_MODE=test go test -v ./...
 
 .PHONY: test
 docker:
