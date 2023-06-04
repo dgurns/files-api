@@ -5,7 +5,7 @@ import (
 	"net/http/httptest"
 	"testing"
 
-	"github.com/go-chi/chi/v5"
+	"github.com/gin-gonic/gin"
 	_ "github.com/mattn/go-sqlite3"
 	"github.com/stretchr/testify/assert"
 )
@@ -17,9 +17,9 @@ func TestSearchFilesMissingQuery(t *testing.T) {
 	}
 	rr := httptest.NewRecorder()
 
-	r := chi.NewRouter()
+	r := gin.Default()
 	h := NewTestHandler()
-	r.Get("/files/search", h.SearchFiles)
+	r.GET("/files/search", h.SearchFiles)
 
 	r.ServeHTTP(rr, req)
 
@@ -34,9 +34,9 @@ func TestSearchFiles(t *testing.T) {
 	}
 	rr := httptest.NewRecorder()
 
-	r := chi.NewRouter()
+	r := gin.Default()
 	h := NewTestHandler()
-	r.Get("/files/search", h.SearchFiles)
+	r.GET("/files/search", h.SearchFiles)
 
 	r.ServeHTTP(rr, req)
 

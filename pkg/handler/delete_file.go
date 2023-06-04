@@ -4,27 +4,27 @@ import (
 	"net/http"
 	"strconv"
 
-	"github.com/go-chi/chi/v5"
+	"github.com/gin-gonic/gin"
 )
 
-func (h *Handler) DeleteFile(w http.ResponseWriter, r *http.Request) {
-	id, err := strconv.Atoi(chi.URLParam(r, "id"))
+func (h *Handler) DeleteFile(c *gin.Context) {
+	id, err := strconv.Atoi(c.Param("id"))
 	if err != nil {
-		http.Error(w, "Invalid file id", http.StatusBadRequest)
+		c.String(http.StatusBadRequest, "Invalid file id")
 		return
 	}
 
 	err = h.db.DeleteFile(id)
 	if err != nil {
-		http.Error(w, "Error deleting file from database", http.StatusInternalServerError)
+		c.String(http.StatusInternalServerError, "Error deleting file from database")
 		return
 	}
 
 	err = h.storage.DeleteFile(id)
 	if err != nil {
-		http.Error(w, "Error deleting file from storage", http.StatusInternalServerError)
+		c.String(http.StatusInternalServerError, "Error deleting file from storage")
 		return
 	}
 
-	w.WriteHeader(http.StatusOK)
+	c.Status(http.StatusOK)
 }

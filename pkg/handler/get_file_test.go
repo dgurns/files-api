@@ -6,7 +6,7 @@ import (
 	"net/http/httptest"
 	"testing"
 
-	"github.com/go-chi/chi/v5"
+	"github.com/gin-gonic/gin"
 	_ "github.com/mattn/go-sqlite3"
 	"github.com/stretchr/testify/assert"
 )
@@ -18,9 +18,9 @@ func TestGetFile(t *testing.T) {
 	}
 	rr := httptest.NewRecorder()
 
-	r := chi.NewRouter()
+	r := gin.Default()
 	h := NewTestHandler()
-	r.Get("/files/{id}", h.GetFile)
+	r.GET("/files/:id", h.GetFile)
 
 	r.ServeHTTP(rr, req)
 

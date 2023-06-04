@@ -1,10 +1,10 @@
 package handler
 
 import (
-	"encoding/json"
 	"net/http"
 
 	"github.com/dgurns/files-api/internal/db"
+	"github.com/gin-gonic/gin"
 )
 
 type SearchResult struct {
@@ -17,16 +17,16 @@ type SearchFilesResponse struct {
 	Results []*SearchResult `json:"results"`
 }
 
-func (h *Handler) SearchFiles(w http.ResponseWriter, r *http.Request) {
-	query := r.URL.Query().Get("query")
+func (h *Handler) SearchFiles(c *gin.Context) {
+	query := c.Query("query")
 	if query == "" {
-		http.Error(w, "Missing query parameter", http.StatusBadRequest)
+		c.String(http.StatusBadRequest, "Missing query parameter")
 		return
 	}
 
 	files, err := h.db.SearchFiles(query)
 	if err != nil {
-		http.Error(w, "No files found", http.StatusNotFound)
+		c.String(http.StatusNotFound, "No files found")
 		return
 	}
 
@@ -34,7 +34,7 @@ func (h *Handler) SearchFiles(w http.ResponseWriter, r *http.Request) {
 	for _, f := range files {
 		meta, err := db.JSONStrToMap(f.Metadata)
 		if err != nil {
-			http.Error(w, "Error unmarshalling metadata", http.StatusInternalServerError)
+			c.String(http.StatusInternalServerError, "Error unmarshalling metadata")
 			return
 		}
 		results = append(results, &SearchResult{
@@ -44,10 +44,5 @@ func (h *Handler) SearchFiles(w http.ResponseWriter, r *http.Request) {
 		})
 	}
 
-	res, err := json.Marshal(&SearchFilesResponse{Results: results})
-	if err != nil {
-		http.Error(w, "Error marshalling response", http.StatusInternalServerError)
-		return
-	}
-	w.Write(res)
+	c.JSON(http.StatusOK, &SearchFilesResponse{Results: results})
 }

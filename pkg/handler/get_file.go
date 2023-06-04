@@ -1,12 +1,11 @@
 package handler
 
 import (
-	"encoding/json"
 	"net/http"
 	"strconv"
 
 	"github.com/dgurns/files-api/internal/db"
-	"github.com/go-chi/chi/v5"
+	"github.com/gin-gonic/gin"
 )
 
 type GetFileResponse struct {
@@ -16,40 +15,35 @@ type GetFileResponse struct {
 	Data     []byte                 `json:"data"`
 }
 
-func (h *Handler) GetFile(w http.ResponseWriter, r *http.Request) {
-	id, err := strconv.Atoi(chi.URLParam(r, "id"))
+func (h *Handler) GetFile(c *gin.Context) {
+	id, err := strconv.Atoi(c.Param("id"))
 	if err != nil {
-		http.Error(w, "Invalid file id", http.StatusBadRequest)
+		c.String(http.StatusBadRequest, "Invalid file id")
 		return
 	}
 
 	file, err := h.db.GetFile(id)
 	if err != nil {
-		http.Error(w, "File not found in database", http.StatusNotFound)
+		c.String(http.StatusNotFound, "File not found in database")
 		return
 	}
 
 	meta, err := db.JSONStrToMap(file.Metadata)
 	if err != nil {
-		http.Error(w, "Error unmarshalling metadata", http.StatusInternalServerError)
+		c.String(http.StatusInternalServerError, "Error unmarshalling metadata")
 		return
 	}
 
 	fileBytes, err := h.storage.GetFile(id)
 	if err != nil {
-		http.Error(w, "File not found in storage", http.StatusNotFound)
+		c.String(http.StatusNotFound, "File not found in storage")
 		return
 	}
 
-	res, err := json.Marshal(&GetFileResponse{
+	c.JSON(http.StatusOK, &GetFileResponse{
 		ID:       file.ID,
 		Name:     file.Name,
 		Metadata: meta,
 		Data:     fileBytes,
 	})
-	if err != nil {
-		http.Error(w, "Error marshalling response", http.StatusInternalServerError)
-		return
-	}
-	w.Write(res)
 }

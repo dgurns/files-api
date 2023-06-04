@@ -3,17 +3,14 @@ package server
 import (
 	"database/sql"
 	"fmt"
-	"net/http"
 	"os"
-	"time"
 
+	"github.com/gin-gonic/gin"
 	_ "github.com/mattn/go-sqlite3"
 
 	"github.com/dgurns/files-api/internal/db"
 	"github.com/dgurns/files-api/internal/storage"
 	"github.com/dgurns/files-api/pkg/handler"
-	"github.com/go-chi/chi/v5"
-	"github.com/go-chi/chi/v5/middleware"
 )
 
 func Run() error {
@@ -40,29 +37,27 @@ func Run() error {
 		return err
 	}
 
-	r := chi.NewRouter()
+	// set up router and middleware
+	r := gin.Default()
+	r.SetTrustedProxies(nil)
 
-	// set up middleware
 	username := os.Getenv("BASIC_AUTH_USERNAME")
 	pwd := os.Getenv("BASIC_AUTH_PASSWORD")
 	if username == "" || pwd == "" {
 		fmt.Println("BASIC_AUTH_USERNAME and BASIC_AUTH_PASSWORD must be set")
 		os.Exit(1)
 	}
-	r.Use(middleware.BasicAuth("user", map[string]string{
+	a := r.Group("/", gin.BasicAuth(gin.Accounts{
 		username: pwd,
 	}))
-	r.Use(middleware.Logger)
-	r.Use(middleware.Recoverer)
-	r.Use(middleware.Timeout(60 * time.Second))
 
 	// handle routes
 	h := handler.New(dbClient, storageClient)
-	r.Post("/files/upload", h.UploadFile)
-	r.Get("/files/{id}", h.GetFile)
-	r.Delete("/files/{id}", h.DeleteFile)
-	r.Get("/files/search", h.SearchFiles)
+	a.POST("/files/upload", h.UploadFile)
+	a.GET("/files/:id", h.GetFile)
+	a.DELETE("/files/:id", h.DeleteFile)
+	a.GET("/files/search", h.SearchFiles)
 
 	fmt.Println("files-api server listening on port 8080")
-	return http.ListenAndServe(":8080", r)
+	return r.Run(":8080")
 }
