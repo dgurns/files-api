@@ -20,10 +20,14 @@ func (h *Handler) UploadFile(c *gin.Context) {
 	}
 
 	allowed := []string{"application/pdf", "image/jpeg", "image/png"}
+	isAllowed := false
 	for _, a := range allowed {
 		if file.Header.Get("Content-Type") == a {
+			isAllowed = true
 			break
 		}
+	}
+	if !isAllowed {
 		c.String(http.StatusBadRequest, "Invalid file type: only PDF, JPEG, or PNG are allowed")
 		return
 	}
